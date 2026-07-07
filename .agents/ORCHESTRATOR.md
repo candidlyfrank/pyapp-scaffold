@@ -190,14 +190,14 @@ The final consolidated response must include:
 │   ├── onboarding/                 # Setup instructions
 │   └── operations/                 # Runbooks and deployment guides
 ├── src/                            # Business logic (Service Layer)
-│   ├── django/                  # Django service
-│   │   ├── django_app/             # Python source code
+│   ├── django/                  # Django web framework service and application
+│   │   ├── app/                     # Python source code
 │   │   ├── tests/                   # Unit and integration tests
 │   │   ├── Dockerfile               # Multi-stage (Dev/Builder/Prod targets)
 │   │   ├── pyproject.toml           # Django project metadata and dependencies
 │   │   └── uv.lock                  # Django deterministic dependency lock
-│   └── fastapi/                 # FastAPI service
-│       ├── fastapi_app/
+│   └── fastapi/                 # FastAPI web framework service and application
+│       ├── app/                    # Python source code
 │       ├── tests/
 │       ├── Dockerfile               # Multi-stage (Dev/Builder/Prod targets)
 │       ├── pyproject.toml           # FastAPI project metadata and dependencies
@@ -212,3 +212,16 @@ The final consolidated response must include:
 ├── docker-compose.dev.yml           # Dev overrides (Volumes, debug ports)
 ├── docker-compose.staging.yml      # Staging overrides
 └── docker-compose.prod.yml          # Prod overrides (Hardened, no volumes)
+
+
+## Service Source Layout
+
+Django must use `src/django/app` as its Python application package.
+Do not rename the Django package to `django_app`, `project`, `core`, or any other name.
+
+FastAPI must use `src/fastapi/app` as its Python application package.
+
+Because Django and FastAPI are independent Python projects with separate
+`pyproject.toml` and `uv.lock` files, both services may use an `app` package
+name without import collisions. Tests, Dockerfiles, and Compose commands must
+execute within each service project context.
