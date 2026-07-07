@@ -10,11 +10,11 @@ Dispatch three subagents in parallel:
 2. **CI/CD-focused agent:** pipelines, vulnerability scanning, image publishing, deployment workflows, release gates.
 3. **Production-focused agent:** security, observability, reliability, operations, compliance validation.
 
-This is an implementation task, not review-only. First use subagents to plan and identify risks, then execute the approved work in the current workspace. Wait for all subagents before consolidating, provide incremental summaries, ask for approval when making any changes or missing approval.
+This is an implementation task. First use subagents to plan and identify risks. Create a plan for each subagent with a checklist, then execute the approved planned work in the current workspace. Wait for all subagents before consolidating, provide incremental summaries, ask for approval when creating and updating any files.
 
-Subagents may review in read-only mode during the planning phase. After the main thread approves the execution plan, implementation subagents may edit files inside the current workspace, run local validation commands, and create the requested scaffold. They must ask before destructive actions, deployment actions, network access, or writes outside the workspace.
+After the main thread approves the execution plan, implementation subagents may edit files inside the current workspace, run local validation commands, and create the requested scaffold. They must ask before destructive actions, deployment actions, network access, or writes outside the workspace.
 
-The main thread must explicitly wait until all requested subagents return before consolidating results. Do not produce the final answer early. If a subagent is still running, continue waiting or actively steer it.
+The main thread must explicitly wait until all requested subagents return before consolidating results. Do not produce the final answer early. If a subagent is still running, continue waiting or ask for permission to actively steer it.
 
 The main thread may directly steer a running subagent, stop it, or close completed agent threads when needed. Use steering when scope drifts, stop a subagent when its result is no longer needed or it is blocked, and close completed agent threads after their summaries have been captured.
 
@@ -65,8 +65,8 @@ Production and staging deployment workflows must remain Docker Compose based. If
 Design and implement a unified Docker-based Python environment with:
 
 - A single portable Python 3.11 slim-bullseye base image used by all services where appropriate.
-- FastAPI service on port `8000` with a default scaffold and async support.
-- Django service on port `8001` with a default scaffold.
+- Django web framework service on port `8090` with a default scaffold.
+- FastAPI web framework service on port `8099` with a default scaffold and async support.
 - Caddy reverse proxy on ports `80` and `443` with routing rules and security features.
 - PostgreSQL 15+ per service with connection pooling and replication for production-like environments.
 - Redis Sentinel for high-availability caching and session storage in production-like environments.
@@ -129,8 +129,6 @@ Provide or validate commands for:
 ### Hot Reload
 
 Validate hot-reload configuration:
-
-- FastAPI reloader with volume mounts.
 - Django reloader with volume mounts.
 - File synchronization through Docker volume mounts.
 - Automatic service restart on file changes.
@@ -143,7 +141,7 @@ Validate debugging support:
 - `debugpy` installed in development images.
 - Debug ports exposed for each service.
 - VS Code launch configuration provided.
-- Breakpoint support in FastAPI and Django.
+- Breakpoint support in Django.
 - Variable inspection support.
 - Remote debugging support.
 - Simultaneous debugging of multiple services.
