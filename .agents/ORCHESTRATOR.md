@@ -220,8 +220,13 @@ Django must use `src/django/app` as its Python application package.
 Do not rename the Django package to `django_app`, `project`, `core`, or any other name.
 
 FastAPI must use `src/fastapi/app` as its Python application package.
+Do not rename the FastAPI package to `fastapi_app`, `project`, `core`, or any other name.
 
 Because Django and FastAPI are independent Python projects with separate
 `pyproject.toml` and `uv.lock` files, both services may use an `app` package
 name without import collisions. Tests, Dockerfiles, and Compose commands must
 execute within each service project context.
+
+Validation must fail if `src/django/django_app` exists, if Django settings
+reference `django_app.settings`, if `src/fastapi/fastapi_app` exists, or if
+FastAPI commands reference `fastapi_app.main:app`.

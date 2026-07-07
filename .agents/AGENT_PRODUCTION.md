@@ -18,6 +18,10 @@ Review and summarize production security, observability, reliability, and operat
 
 ## Production Dependency Isolation
 Validate that production images preserve Django/FastAPI project independence:
+- Django production images must copy and run the package at `src/django/app`.
+- FastAPI production images must copy and run the package at `src/fastapi/app`.
+- Production validation must fail if image commands reference
+  `django_app.settings` or `fastapi_app.main:app`.
 - Django production images install only from `src/django/pyproject.toml` and
   `src/django/uv.lock`.
 - FastAPI production images install only from `src/fastapi/pyproject.toml` and

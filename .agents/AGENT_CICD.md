@@ -29,6 +29,11 @@ Validate that workflow jobs delegate to shared local commands (e.g., `make ci`, 
 ## Service Project Independence
 Validate that CI/CD treats Django and FastAPI as independent build and test
 units:
+- Django source package must be `src/django/app`.
+- FastAPI source package must be `src/fastapi/app`.
+- CI must fail if `src/django/django_app` or `src/fastapi/fastapi_app` exists.
+- CI must fail if Django settings reference `django_app.settings` or FastAPI
+  commands reference `fastapi_app.main:app`.
 - `uv sync --locked` must run independently for `src/django` and `src/fastapi`.
 - CI must run Django tests from the Django project and FastAPI tests from the
   FastAPI project.
@@ -43,3 +48,5 @@ units:
 - CI should expose or validate service-specific commands such as
   `make lock-django`, `make lock-fastapi`, `make test-django`,
   `make test-fastapi`, `make scan-django`, and `make scan-fastapi`.
+- CI must not validate service tests by relying on one root pytest invocation
+  that puts both services on one shared `pythonpath`.

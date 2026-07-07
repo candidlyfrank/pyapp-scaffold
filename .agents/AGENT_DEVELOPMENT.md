@@ -27,6 +27,12 @@ Validate a multi-stage Dockerfile with explicit targets:
 
 ## Python Project Isolation
 Validate that Django and FastAPI are independent Python projects:
+- Django must use `src/django/app` as its Python application package.
+- FastAPI must use `src/fastapi/app` as its Python application package.
+- Do not rename the Django package to `django_app`, `project`, `core`, or any
+  other name.
+- Do not rename the FastAPI package to `fastapi_app`, `project`, `core`, or any
+  other name.
 - Django owns `src/django/pyproject.toml` and `src/django/uv.lock`.
 - FastAPI owns `src/fastapi/pyproject.toml` and `src/fastapi/uv.lock`.
 - Django tests run with the Django project environment only.
@@ -39,6 +45,9 @@ Validate that Django and FastAPI are independent Python projects:
   from a shared root dependency lock.
 - Ordinary local development commands must preserve service isolation while
   still offering a root-level `make` interface.
+- Validation must fail if `src/django/django_app` or `src/fastapi/fastapi_app`
+  exists, if Django settings reference `django_app.settings`, or if FastAPI
+  commands reference `fastapi_app.main:app`.
 
 ## Development Commands
 Provide or validate commands for:
@@ -95,6 +104,9 @@ Validate developer-friendly testing:
 - Function-scoped fixtures and parallel execution.
 - Service-local pytest configuration in each service's `pyproject.toml`.
 - Root-level tests limited to repository contracts and cross-service integration.
+- Test command execution must not rely on adding both `src/django` and
+  `src/fastapi` to one shared root `pythonpath`; each service runs in its own
+  project context so both can safely use an `app` package name.
 
 ## Environment Switching
 Validate environment configuration:
