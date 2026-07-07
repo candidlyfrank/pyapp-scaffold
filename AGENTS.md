@@ -10,7 +10,7 @@ Dispatch three subagents in parallel:
 2. **CI/CD-focused agent:** pipelines, vulnerability scanning, image publishing, deployment workflows, release gates.
 3. **Production-focused agent:** security, observability, reliability, operations, compliance validation.
 
-This is an implementation task, not review-only. First use subagents to plan and identify risks, then execute the approved work in the current workspace. Wait for all subagents before consolidating, but do not stop at summaries unless blocked by permissions or missing approval.
+This is an implementation task, not review-only. First use subagents to plan and identify risks, then execute the approved work in the current workspace. Wait for all subagents before consolidating, provide incremental summaries, ask for approval when making any changes or missing approval.
 
 Subagents may review in read-only mode during the planning phase. After the main thread approves the execution plan, implementation subagents may edit files inside the current workspace, run local validation commands, and create the requested scaffold. They must ask before destructive actions, deployment actions, network access, or writes outside the workspace.
 
