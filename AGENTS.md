@@ -18,17 +18,56 @@ The main thread must explicitly wait until all requested subagents return before
 
 The main thread may directly steer a running subagent, stop it, or close completed agent threads when needed. Use steering when scope drifts, stop a subagent when its result is no longer needed or it is blocked, and close completed agent threads after their summaries have been captured.
 
-## Return Format
+### Subagent Contract
+Each subagent must declare:
+- **Working directory**: Where operations should be performed
+- **Required environment**: Dependencies, tools, or credentials needed
+- **Timeout expectations**: Estimated duration and timeout handling
+- **Success criteria**: Explicit definition of what "done" means
+- **Failure modes**: How to handle partial failures or missing data
 
-Subagents must return summaries, not raw command output. Summaries should include:
+### State Handling
+- **Persistent state**: What files/artifacts survive between subagent calls
+- **Shared state**: Which artifacts are passed between subagents
+- **State validation**: How to verify previous subagent artifacts exist
+- **Idempotency**: Operations that can be safely re-run
 
-- Decisions made
-- Risks found
-- Recommended changes
-- Validation performed
-- Open questions or blockers
+### Return Format and Structured Reporting
+Subagents must return structured summaries of their work:
+- **Action taken**: What was done
+- **Artifacts created**: Files, configs, docs
+- **Validations performed**: Tests, checks
+- **Risks identified**: With severity ratings
+- **Dependencies changed**: With rationale
+- **Open questions**: Blocked decisions and open questions
+- **Cross-agent impacts**: How changes affect others
 
-Do not paste raw logs, raw scanner output, raw test output, or long command transcripts. Summarize the evidence and include concise references only where useful.
+### Peer Review Requirements
+- **Self-review**: What subagent reviewed in their own work
+- **Cross-review**: What other agents should verify
+- **Security review**: For security-sensitive changes
+- **Performance review**: For performance-sensitive changes
+
+### Output Artifacts
+Subagents must produce:
+- **Files created/modified**: List with paths and brief description
+- **Configuration changes**: Before/after for any config files
+- **Dependencies added**: New packages with versions and rationale
+- **Documentation updates**: What was created or updated
+- **Validation results**: Summary of tests run and outcomes
+
+### Rollback Planning
+Subagents must:
+- Define rollback procedure for their changes
+- Test rollback before implementation
+- Document rollback impact (data loss, downtime, etc.)
+- Provide verification that rollback works
+
+### Error Handling
+- **Retry strategy**: Which errors are retryable and with what backoff
+- **Partial success**: When to proceed vs. abort
+- **Error reporting**: Required error summary format
+- **Escalation**: When to return error to main thread vs. attempt self-correction
 
 ## Reasoning Effort
 
@@ -60,6 +99,25 @@ Local workflow execution must be documented, including prerequisites for `act`, 
 
 Production and staging deployment workflows must remain Docker Compose based. If orchestration assumptions are needed, model them with Compose files, Compose profiles, health checks, restart policies, and documented operational procedures.
 
+### Environment Validation
+- **Required tools**: `docker`, `docker compose`, `uv`, `act`, `make`
+- **Version requirements**: Specific version constraints
+- **Network access**: Firewall/proxy requirements
+- **Credentials**: Required access tokens and permissions
+
+### Dependency Contracts
+Explicit contracts between agents:
+- **Dev agent**: What CI/CD needs from Dev (test commands, compose files)
+- **CI/CD agent**: What Production needs from CI/CD (images, artifacts)
+- **Shared artifacts**: What files/services are shared and version expectations
+
+### Validation Gates
+Each agent must validate:
+- **Before starting**: Preconditions are met
+- **During work**: Intermediate validation checkpoints
+- **After completion**: All success criteria met
+- **Cross-check**: Verify other agents' assumptions
+
 ## Core Requirements
 
 Design and implement a unified Docker-based Python environment with:
@@ -70,6 +128,33 @@ Design and implement a unified Docker-based Python environment with:
 - Caddy reverse proxy on ports `80` and `443` with routing rules and security features.
 - PostgreSQL 15+ per service with connection pooling and replication for production-like environments.
 - Redis Sentinel for high-availability caching and session storage in production-like environments.
+
+### Testing Requirements
+- **Unit tests**: For new code, coverage requirements
+- **Integration tests**: For service interactions
+- **End-to-end tests**: For complete workflows
+- **Performance tests**: For changes affecting performance
+- **Security tests**: For security-sensitive changes
+
+### Security Validation
+- **Secrets exposure**: Audit for accidentally committed secrets
+- **Permission changes**: Document any permission modifications
+- **Network changes**: Document any new open ports or services
+- **Dependency validation**: Confirm no malicious packages
+- **Compliance markers**: Any changes affecting compliance posture
+
+### Performance Expectations
+- **Execution time**: Maximum expected runtime
+- **Resource usage**: CPU, memory, disk constraints
+- **Scaling considerations**: How changes affect scaling
+- **Startup time**: Service startup impact
+
+### Documentation Requirements
+- **README updates**: For any user-facing changes
+- **Onboarding docs**: For development environment changes
+- **Operations docs**: For production changes
+- **API docs**: For service changes
+- **Architecture docs**: For structural changes
 
 ## Dependency Management
 
@@ -316,3 +401,9 @@ The consolidated response must include:
 - Remaining blockers or assumptions.
 
 The final response must not include raw subagent output. It should synthesize the subagent summaries into a single actionable result.
+
+### Cleanup and Teardown
+- **Temporary files**: What to clean and when
+- **Service cleanup**: Ensure services stop properly
+- **Volume cleanup**: Remove test/development volumes
+- **State cleanup**: Reset test state between runs
