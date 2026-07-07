@@ -25,12 +25,31 @@ Validate a multi-stage Dockerfile with explicit targets:
 - **Builder target**: Dependency installation and optimization.
 - **Production target**: Distroless base and security hardening.
 
+## Python Project Isolation
+Validate that Django and FastAPI are independent Python projects:
+- Django owns `src/django/pyproject.toml` and `src/django/uv.lock`.
+- FastAPI owns `src/fastapi/pyproject.toml` and `src/fastapi/uv.lock`.
+- Django tests run with the Django project environment only.
+- FastAPI tests run with the FastAPI project environment only.
+- Django runtime dependencies do not include FastAPI-only packages.
+- FastAPI runtime dependencies do not include Django-only packages.
+- Root-level Python project files, if present, are limited to repository tooling
+  and must not define either service's runtime dependency set.
+- Dockerfiles install from service-local `pyproject.toml` and `uv.lock`, not
+  from a shared root dependency lock.
+- Ordinary local development commands must preserve service isolation while
+  still offering a root-level `make` interface.
+
 ## Development Commands
 Provide or validate commands for:
 - Starting/stopping the environment.
 - Tailing logs (all services or specific services).
 - Opening shells in service containers.
 - Running unit, integration, and watch-mode tests.
+- Running service-specific tests such as `make test-django` and
+  `make test-fastapi` using each service's own `uv` project.
+- Locking service dependencies independently, e.g. `make lock-django` and
+  `make lock-fastapi`.
 - Resetting/seeding databases and running migrations.
 - Building/cleaning development images.
 - Attaching debuggers.
@@ -74,6 +93,8 @@ Validate developer-friendly testing:
 - Isolated test databases via Testcontainers.
 - Factory patterns for test data.
 - Function-scoped fixtures and parallel execution.
+- Service-local pytest configuration in each service's `pyproject.toml`.
+- Root-level tests limited to repository contracts and cross-service integration.
 
 ## Environment Switching
 Validate environment configuration:

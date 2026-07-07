@@ -16,6 +16,19 @@ Review and summarize production security, observability, reliability, and operat
     - CORS restricted to approved origins.
 - **Secrets**: Secure secrets management strategy.
 
+## Production Dependency Isolation
+Validate that production images preserve Django/FastAPI project independence:
+- Django production images install only from `src/django/pyproject.toml` and
+  `src/django/uv.lock`.
+- FastAPI production images install only from `src/fastapi/pyproject.toml` and
+  `src/fastapi/uv.lock`.
+- Production images do not include the other service's source code or runtime
+  dependencies.
+- SBOMs, vulnerability scans, and provenance must be generated per service image
+  so dependency risk can be attributed to Django or FastAPI independently.
+- Rollback and promotion must track separate immutable image references for
+  Django and FastAPI.
+
 ## Reliability and Scaling
 - **Database**: PostgreSQL 15+ per service with connection pooling and replication.
 - **High Availability**: Redis Sentinel for high availability.

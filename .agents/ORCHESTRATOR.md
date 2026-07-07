@@ -90,6 +90,30 @@ Use GitHub Actions as the canonical CI/CD system. Workflows must run in GitHub-h
 CI/CD checks should be exposed through shared local commands via `make`:
 - `make lint`, `make test`, `make test-integration`, `make scan`, `make compose-check`, `make ci`, `make act-ci`.
 
+### Project Isolation and Dependency Ownership
+FastAPI and Django must be treated as independent Python projects. The root of
+the repository may contain orchestration tooling only; it must not be the shared
+runtime dependency owner for both services.
+
+Required service-local dependency artifacts:
+- Django: `src/django/pyproject.toml` and `src/django/uv.lock`.
+- FastAPI: `src/fastapi/pyproject.toml` and `src/fastapi/uv.lock`.
+
+Isolation requirements:
+- Django runtime dependencies must not include FastAPI-only packages.
+- FastAPI runtime dependencies must not include Django-only packages.
+- Service Dockerfiles must copy and install from their own service-local
+  `pyproject.toml` and `uv.lock`.
+- Docker Compose build contexts must be service-local unless a task explicitly
+  documents why repository-root context is required.
+- GitHub image publishing must build Django and FastAPI from their independent
+  service Dockerfiles and dependency locks.
+- Root-level tooling may provide shared `make` commands, repository-contract
+  tests, lint orchestration, and documentation checks, but must not collapse the
+  services back into one Python runtime project.
+- If a root `pyproject.toml` exists, it must be limited to repository-level
+  tooling and must not define Django or FastAPI application runtime dependencies.
+
 ### Environment Validation
 - **Required tools**: `docker`, `docker compose`, `uv`, `act`, `make`
 - **Version requirements**: Specific version constraints
@@ -100,6 +124,9 @@ CI/CD checks should be exposed through shared local commands via `make`:
 - **Dev agent**: What CI/CD needs from Dev (test commands, compose files)
 - **CI/CD agent**: What Production needs from CI/CD (images, artifacts)
 - **Shared artifacts**: What files/services are shared and version expectations
+- **Service dependency ownership**: Dev and CI/CD must cross-check that Django
+  and FastAPI remain independently installable, testable, buildable, and
+  lockable via their service-local `pyproject.toml` and `uv.lock`.
 
 ### Validation Gates
 Each agent must validate:
@@ -121,7 +148,9 @@ Each agent must validate:
 ### Testing & Quality
 - **Unit/Integration/E2E/Performance/Security tests** required for new code.
 - **Security**: Audit for secrets exposure, permission changes, and dependency vulnerabilities.
-- **Dependency Management**: Use `uv` (maintain `uv.lock`, optimize Docker layer caching).
+- **Dependency Management**: Use `uv` with service-local locks
+  (`src/django/uv.lock`, `src/fastapi/uv.lock`) and optimize Docker layer
+  caching around each service's own lockfile.
 
 ### Documentation
 - Required: README, Onboarding, Operations, API, and Architecture docs.
@@ -162,20 +191,23 @@ The final consolidated response must include:
 │   └── operations/                 # Runbooks and deployment guides
 ├── src/                            # Business logic (Service Layer)
 │   ├── django/                  # Django service
-│   │   ├── app/                    # Python source code
+│   │   ├── django_app/             # Python source code
 │   │   ├── tests/                   # Unit and integration tests
 │   │   ├── Dockerfile               # Multi-stage (Dev/Builder/Prod targets)
-│   │   └── requirements.txt         # (Optional, if not using uv strictly)
+│   │   ├── pyproject.toml           # Django project metadata and dependencies
+│   │   └── uv.lock                  # Django deterministic dependency lock
 │   └── fastapi/                 # FastAPI service
-│       ├── app/
+│       ├── fastapi_app/
 │       ├── tests/
-│       └── Dockerfile               # Multi-stage (Dev/Builder/Prod targets)
+│       ├── Dockerfile               # Multi-stage (Dev/Builder/Prod targets)
+│       ├── pyproject.toml           # FastAPI project metadata and dependencies
+│       └── uv.lock                  # FastAPI deterministic dependency lock
 ├── .env.dev                    # Local development secrets
 ├── .env.staging                 # Staging environment secrets
 ├── .env.prod                    # Production secrets (never committed)
 ├── Makefile                       # The "Interface" for all agents (make test, make scan, etc.)
-├── pyproject.toml                   # uv/Python project metadata
-├── uv.lock                          # Deterministic dependency lockfile
+├── pyproject.toml                   # Optional repo tooling only; no app runtime deps
+├── uv.lock                          # Optional repo tooling lock only
 ├── docker-compose.yml               # Base services (Postgres, Redis, Caddy)
 ├── docker-compose.dev.yml           # Dev overrides (Volumes, debug ports)
 ├── docker-compose.staging.yml      # Staging overrides
