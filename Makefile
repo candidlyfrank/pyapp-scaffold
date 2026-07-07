@@ -13,6 +13,7 @@ FASTAPI_UV := UV_CACHE_DIR=../../.uv-cache uv --project src/fastapi
 .PHONY: lint test test-contract test-unit test-integration test-watch test-fast
 .PHONY: lock-django lock-fastapi test-django test-fastapi scan-django scan-fastapi scan compose-check ci act-ci
 .PHONY: prod-build prod-up prod-smoke backup restore rollback
+.PHONY: shell-django
 
 up:
 	$(COMPOSE) $(DEV_FILES) up --build -d
@@ -34,6 +35,9 @@ logs:
 
 shell:
 	$(COMPOSE) $(DEV_FILES) exec $(SERVICE) /bin/sh
+
+shell-django:
+	$(COMPOSE) $(DEV_FILES) exec django /bin/sh -lc '. /opt/venv/bin/activate && export DJANGO_SETTINGS_MODULE=app.settings && exec /bin/sh'
 
 migrate:
 	$(COMPOSE) $(DEV_FILES) exec django python manage.py migrate
