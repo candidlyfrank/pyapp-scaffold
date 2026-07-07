@@ -37,7 +37,7 @@ shell:
 	$(COMPOSE) $(DEV_FILES) exec $(SERVICE) /bin/sh
 
 shell-django:
-	$(COMPOSE) $(DEV_FILES) exec django /bin/sh -lc '. /opt/venv/bin/activate && export DJANGO_SETTINGS_MODULE=app.settings && exec /bin/sh'
+	$(COMPOSE) $(DEV_FILES) exec django /bin/sh -lc '. /opt/venv/bin/activate && exec /bin/sh'
 
 migrate:
 	$(COMPOSE) $(DEV_FILES) exec django python manage.py migrate

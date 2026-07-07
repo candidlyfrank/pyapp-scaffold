@@ -3,6 +3,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
+    DJANGO_SETTINGS_MODULE=app.settings \
+    PYTHONPATH=/app \
     PATH="/opt/venv/bin:$PATH"
 WORKDIR /app
 RUN apt-get update \
