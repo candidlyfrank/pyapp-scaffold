@@ -1,0 +1,17 @@
+staging.example.com {
+	encode gzip
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy no-referrer
+		Permissions-Policy "geolocation=(), microphone=(), camera=()"
+	}
+
+	handle_path /django/* {
+		reverse_proxy django:8090
+	}
+
+	handle_path /fastapi/* {
+		reverse_proxy fastapi:8099
+	}
+}

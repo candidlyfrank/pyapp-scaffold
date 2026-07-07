@@ -1,0 +1,93 @@
+name: pyapp-scaffold
+
+services:
+  django:
+    build:
+      context: ./src/django
+      dockerfile: Dockerfile
+      target: development
+    env_file: .env.dev
+    depends_on:
+      postgres-django:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/opt/venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/health/')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  fastapi:
+    build:
+      context: ./src/fastapi
+      dockerfile: Dockerfile
+      target: development
+    env_file: .env.dev
+    depends_on:
+      postgres-fastapi:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/opt/venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8099/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  caddy:
+    image: caddy:2.8
+    depends_on:
+      django:
+        condition: service_started
+      fastapi:
+        condition: service_started
+    ports:
+      - "80:80"
+      - "443:443"
+
+  postgres-django:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: django_app
+      POSTGRES_USER: django_app
+      POSTGRES_PASSWORD: django_app_dev
+    volumes:
+      - postgres_django_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U django_app -d django_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres-fastapi:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: fastapi_app
+      POSTGRES_USER: fastapi_app
+      POSTGRES_PASSWORD: fastapi_app_dev
+    volumes:
+      - postgres_fastapi_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fastapi_app -d fastapi_app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_django_data:
+  postgres_fastapi_data:
+  redis_data:
+  caddy_data:
+  caddy_config:

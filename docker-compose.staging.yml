@@ -1,0 +1,34 @@
+services:
+  django:
+    build:
+      target: production
+    env_file: .env.staging.example
+    environment:
+      ENV: staging
+      LOG_FORMAT: json
+    restart: unless-stopped
+
+  fastapi:
+    build:
+      target: production
+    env_file: .env.staging.example
+    environment:
+      ENV: staging
+      LOG_FORMAT: json
+    restart: unless-stopped
+
+  caddy:
+    volumes:
+      - ./config/caddy/Caddyfile.staging:/etc/caddy/Caddyfile:ro
+
+  postgres-django:
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    volumes:
+      - postgres_django_data:/var/lib/postgresql/data
+      - ./config/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+
+  postgres-fastapi:
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    volumes:
+      - postgres_fastapi_data:/var/lib/postgresql/data
+      - ./config/postgres/postgresql.conf:/etc/postgresql/postgresql.conf:ro

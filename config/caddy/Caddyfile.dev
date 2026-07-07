@@ -1,0 +1,20 @@
+pyapp.envx {
+	tls internal
+	encode gzip
+
+	handle_path /django/* {
+		reverse_proxy django:8090
+	}
+
+	handle_path /fastapi/* {
+		reverse_proxy fastapi:8099
+	}
+
+	handle /health {
+		respond "ok" 200
+	}
+
+	handle {
+		reverse_proxy django:8090
+	}
+}

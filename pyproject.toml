@@ -1,0 +1,33 @@
+[project]
+name = "pyapp-scaffold"
+version = "0.1.0"
+description = "Repository tooling for a Docker Compose Python scaffold."
+requires-python = ">=3.11,<3.12"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "bandit[toml]>=1.7,<2.0",
+    "pip-audit>=2.7,<3.0",
+    "pytest>=9.0.3,<10.0",
+    "pyyaml>=6.0,<7.0",
+    "ruff>=0.9,<1.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "-q --import-mode=importlib"
+testpaths = ["tests"]
+markers = [
+    "integration: tests that validate cross-service or container-facing behavior",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101"]
+
+[tool.bandit]
+exclude_dirs = ["tests", "src/django/tests", "src/fastapi/tests"]

@@ -1,0 +1,53 @@
+services:
+  django:
+    image: ${DJANGO_IMAGE:-pyapp-scaffold-django:local}
+    build:
+      target: production
+    env_file: .env.prod.example
+    environment:
+      ENV: production
+      LOG_FORMAT: json
+    user: "10001:10001"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+
+  fastapi:
+    image: ${FASTAPI_IMAGE:-pyapp-scaffold-fastapi:local}
+    build:
+      target: production
+    env_file: .env.prod.example
+    environment:
+      ENV: production
+      LOG_FORMAT: json
+    user: "10002:10002"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+
+  caddy:
+    volumes:
+      - ./config/caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    restart: unless-stopped
+
+  redis:
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    volumes:
+      - redis_data:/data
+      - ./config/redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+
+volumes:
+  caddy_data:
+  caddy_config:

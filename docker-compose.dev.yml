@@ -1,0 +1,50 @@
+services:
+  django:
+    build:
+      target: development
+    command: ["/opt/venv/bin/python", "manage.py", "runserver", "0.0.0.0:8090"]
+    ports:
+      - "8090:8090"
+      - "5678:5678"
+    volumes:
+      - ./src/django:/app
+    environment:
+      ENV: development
+      DEBUG: "1"
+      LOG_LEVEL: DEBUG
+      CORS_ALLOWED_ORIGINS: "*"
+    restart: unless-stopped
+
+  fastapi:
+    build:
+      target: development
+    command: ["/opt/venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8099", "--reload"]
+    ports:
+      - "8099:8099"
+      - "5679:5679"
+    volumes:
+      - ./src/fastapi:/app
+    environment:
+      ENV: development
+      DEBUG: "1"
+      LOG_LEVEL: DEBUG
+      CORS_ALLOWED_ORIGINS: "*"
+    restart: unless-stopped
+
+  caddy:
+    volumes:
+      - ./config/caddy/Caddyfile.dev:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+  postgres-django:
+    ports:
+      - "5433:5432"
+
+  postgres-fastapi:
+    ports:
+      - "5434:5432"
+
+  redis:
+    ports:
+      - "6379:6379"
