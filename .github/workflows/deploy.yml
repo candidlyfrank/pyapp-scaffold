@@ -1,0 +1,27 @@
+name: deploy-compose
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.11
+      - run: uv sync --locked --group dev
+      - run: make compose-check
+      - name: Deployment handoff
+        run: |
+          echo "Publish immutable image tags or digests, update the target .env file, then run Docker Compose on the host."
+          echo "This workflow validates the Compose package; host rollout remains Docker Compose based."

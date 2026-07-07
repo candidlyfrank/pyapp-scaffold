@@ -1,0 +1,29 @@
+name: rollback-compose
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: choice
+        options: [staging, production]
+        required: true
+      previous_env_file:
+        description: "Path to previous known-good env file on deployment host"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  document:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv python install 3.11
+      - run: uv sync --locked --group dev
+      - run: |
+          echo "Rollback uses Docker Compose with previous immutable image tags/digests."
+          echo "On the host: PREVIOUS_ENV_FILE='${{ inputs.previous_env_file }}' make rollback"
+      - run: PREVIOUS_ENV_FILE='${{ inputs.previous_env_file }}' make -n rollback
