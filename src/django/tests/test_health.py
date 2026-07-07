@@ -1,3 +1,5 @@
+import importlib
+
 from django.test import Client
 
 from app import settings
@@ -26,6 +28,20 @@ def test_root_endpoint_renders_default_django_page():
 
 def test_static_url_is_configured_for_staticfiles_runserver():
     assert settings.STATIC_URL == "/static/"
+
+
+def test_csrf_trusted_origins_are_read_from_environment(monkeypatch):
+    monkeypatch.setenv("DJANGO_CSRF_TRUSTED_ORIGINS", "https://pyapp.envx, https://admin.envx")
+    reloaded_settings = importlib.reload(settings)
+
+    assert reloaded_settings.CSRF_TRUSTED_ORIGINS == ["https://pyapp.envx", "https://admin.envx"]
+
+
+def test_csrf_trusted_origins_default_to_empty_when_environment_is_missing(monkeypatch):
+    monkeypatch.delenv("DJANGO_CSRF_TRUSTED_ORIGINS", raising=False)
+    reloaded_settings = importlib.reload(settings)
+
+    assert reloaded_settings.CSRF_TRUSTED_ORIGINS == []
 
 
 def test_default_django_contrib_stack_is_enabled():
