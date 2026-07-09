@@ -19,3 +19,6 @@ urlpatterns = [
     path("health/", health, name="health"),
     path("playground/hello/", views.say_hello, name="hello-world"),
 ]
+
+# django debug toolbar
+urlpatterns += [path("__debug__/", include("debug_toolbar.urls")),]
