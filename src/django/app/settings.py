@@ -93,4 +93,24 @@ LOGGING = {
 
 INTERNAL_IPS = [
     "127.0.0.1",
+    "172.31.0.1"
 ]
+
+import ipaddress
+def show_debug_toolbar(request):
+    if not DEBUG:
+        return False
+
+    remote_addr = request.META.get("REMOTE_ADDR")
+    if remote_addr in INTERNAL_IPS:
+        return True
+
+    try:
+        return ipaddress.ip_address(remote_addr).is_private
+    except ValueError:
+        return False
+
+
+DEBUG_TOOLBAR_CONFIG = {
+    "SHOW_TOOLBAR_CALLBACK": "app.settings.show_debug_toolbar",
+}
