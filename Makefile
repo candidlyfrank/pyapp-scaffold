@@ -9,7 +9,7 @@ UV := UV_CACHE_DIR=.uv-cache uv
 DJANGO_UV := UV_CACHE_DIR=../../.uv-cache uv --project src/django
 FASTAPI_UV := UV_CACHE_DIR=../../.uv-cache uv --project src/fastapi
 
-.PHONY: up down restart restart-django restart-fastapi logs shell migrate reset-db seed-db build-dev clean debug-django debug-fastapi
+.PHONY: up down restart restart-django restart-fastapi restart-frontend logs logs-frontend shell migrate reset-db seed-db build-dev clean debug-django debug-fastapi
 .PHONY: lint test test-contract test-unit test-integration test-watch test-fast
 .PHONY: lock-django lock-fastapi test-django test-fastapi scan-django scan-fastapi scan compose-check ci act-ci
 .PHONY: prod-build prod-up prod-smoke backup restore rollback
@@ -29,6 +29,12 @@ restart-django:
 
 restart-fastapi:
 	$(COMPOSE) $(DEV_FILES) restart fastapi
+
+restart-frontend:
+	$(COMPOSE) $(DEV_FILES) restart frontend
+
+logs-frontend:
+	$(COMPOSE) $(DEV_FILES) logs -f frontend
 
 logs:
 	$(COMPOSE) $(DEV_FILES) logs -f $(SERVICE)

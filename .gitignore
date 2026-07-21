@@ -3,6 +3,9 @@
 .ruff_cache/
 .uv-cache/
 .venv/
+node_modules/
+.next/
+.pnpm-store/
 __pycache__/
 *.py[cod]
 .DS_Store
