@@ -8,7 +8,7 @@ WORKDIR /app
 FROM base AS dependencies
 COPY package.json pnpm-lock.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm --config.fetchTimeout=600000 install --frozen-lockfile --store-dir=/pnpm/store
+    pnpm --config.fetchTimeout=300000 install --frozen-lockfile --store-dir=/pnpm/store
 
 FROM dependencies AS development
 ENV NODE_ENV=development

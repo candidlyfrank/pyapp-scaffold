@@ -78,6 +78,6 @@ def test_frontend_dependency_layer_reuses_a_buildkit_cache():
     dockerfile = read("src/frontend/Dockerfile")
 
     assert "--mount=type=cache,id=pnpm,target=/pnpm/store" in dockerfile
-    assert "--config.fetchTimeout=600000" in dockerfile
+    assert "--config.fetchTimeout=300000" in dockerfile
     assert "npm_config_fetch_timeout" not in dockerfile
     assert "--store-dir=/pnpm/store" in dockerfile
