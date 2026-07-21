@@ -35,6 +35,21 @@ services:
       - /tmp
     restart: unless-stopped
 
+  frontend:
+    image: ${FRONTEND_IMAGE:-pyapp-scaffold-frontend:local}
+    build:
+      target: production
+    environment:
+      NODE_ENV: production
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp
+    restart: unless-stopped
+
   caddy:
     volumes:
       - ./config/caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro

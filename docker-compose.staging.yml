@@ -17,6 +17,13 @@ services:
       LOG_FORMAT: json
     restart: unless-stopped
 
+  frontend:
+    build:
+      target: production
+    environment:
+      NODE_ENV: production
+    restart: unless-stopped
+
   caddy:
     volumes:
       - ./config/caddy/Caddyfile.staging:/etc/caddy/Caddyfile:ro

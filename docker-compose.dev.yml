@@ -31,6 +31,20 @@ services:
       CORS_ALLOWED_ORIGINS: "*"
     restart: unless-stopped
 
+  frontend:
+    build:
+      target: development
+    command: ["pnpm", "dev"]
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./src/frontend:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      NODE_ENV: development
+    restart: unless-stopped
+
   caddy:
     volumes:
       - ./config/caddy/Caddyfile.dev:/etc/caddy/Caddyfile:ro
