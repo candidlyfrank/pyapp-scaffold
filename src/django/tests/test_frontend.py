@@ -74,6 +74,12 @@ def test_django_internal_url_is_never_public_frontend_configuration():
     assert "NEXT_PUBLIC_DJANGO_INTERNAL_URL" not in combined
 
 
+def test_frontend_allows_hmr_through_the_development_domain():
+    next_config = read("src/frontend/next.config.ts")
+
+    assert 'allowedDevOrigins: ["pyapp.envx"]' in next_config
+
+
 def test_frontend_uses_npm_with_a_buildkit_cache():
     dockerfile = read("src/frontend/Dockerfile")
     package = read("src/frontend/package.json")
