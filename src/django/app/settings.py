@@ -1,3 +1,4 @@
+import ipaddress
 import os
 import secrets
 from pathlib import Path
@@ -5,13 +6,24 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", secrets.token_urlsafe(32))
-DEBUG = True
-ALLOWED_HOSTS = ["*"]
+ENV = os.getenv("ENV", "development")
+DEBUG = os.getenv("DEBUG", "1" if ENV == "development" else "0") == "1"
+ALLOWED_HOSTS = [
+    host.strip()
+    for host in os.getenv("DJANGO_ALLOWED_HOSTS", "*").split(",")
+    if host.strip()
+]
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",")
     if origin.strip()
 ]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_COOKIE_SECURE = ENV in {"staging", "production"}
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = ENV in {"staging", "production"}
+CSRF_COOKIE_SAMESITE = "Lax"
 ROOT_URLCONF = "app.urls"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 USE_TZ = True
@@ -96,9 +108,11 @@ INTERNAL_IPS = [
     "172.31.0.1"
 ]
 
-import ipaddress
 def show_debug_toolbar(request):
     if not DEBUG:
+        return False
+
+    if "PYTEST_CURRENT_TEST" in os.environ:
         return False
 
     remote_addr = request.META.get("REMOTE_ADDR")
