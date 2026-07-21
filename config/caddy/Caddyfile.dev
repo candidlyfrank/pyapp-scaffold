@@ -2,7 +2,19 @@ pyapp.envx {
 	tls internal
 	encode gzip
 
-	handle_path /django/* {
+	handle /api/* {
+		reverse_proxy django:8090
+	}
+
+	handle /admin/* {
+		reverse_proxy django:8090
+	}
+
+	handle /static/* {
+		reverse_proxy django:8090
+	}
+
+	handle /media/* {
 		reverse_proxy django:8090
 	}
 
@@ -15,6 +27,6 @@ pyapp.envx {
 	}
 
 	handle {
-		reverse_proxy django:8090
+		reverse_proxy frontend:3000
 	}
 }

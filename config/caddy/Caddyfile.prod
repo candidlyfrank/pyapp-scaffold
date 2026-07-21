@@ -9,11 +9,31 @@ example.com {
 		Content-Security-Policy "default-src 'self'"
 	}
 
-	handle_path /django/* {
+	handle /api/* {
+		reverse_proxy django:8090
+	}
+
+	handle /admin/* {
+		reverse_proxy django:8090
+	}
+
+	handle /static/* {
+		reverse_proxy django:8090
+	}
+
+	handle /media/* {
 		reverse_proxy django:8090
 	}
 
 	handle_path /fastapi/* {
 		reverse_proxy fastapi:8099
+	}
+
+	handle /health {
+		respond "ok" 200
+	}
+
+	handle {
+		reverse_proxy frontend:3000
 	}
 }
