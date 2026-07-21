@@ -34,7 +34,7 @@ services:
   frontend:
     build:
       target: development
-    command: ["pnpm", "dev"]
+    command: ["npm", "run", "dev"]
     ports:
       - "3000:3000"
     volumes:

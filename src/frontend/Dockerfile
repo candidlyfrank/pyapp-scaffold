@@ -1,23 +1,20 @@
 # syntax=docker/dockerfile:1.7
 FROM node:22-alpine AS base
-ENV PNPM_HOME=/pnpm
-ENV PATH=$PNPM_HOME:$PATH
-RUN corepack enable && corepack prepare pnpm@11.7.0 --activate
 WORKDIR /app
 
 FROM base AS dependencies
-COPY package.json pnpm-lock.yaml ./
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm --config.fetchTimeout=300000 install --frozen-lockfile --store-dir=/pnpm/store
+COPY package.json package-lock.json ./
+RUN --mount=type=cache,id=npm,target=/root/.npm \
+    npm ci --fetch-timeout=300000
 
 FROM dependencies AS development
 ENV NODE_ENV=development
 EXPOSE 3000
-CMD ["pnpm", "dev"]
+CMD ["npm", "run", "dev"]
 
 FROM dependencies AS build
 COPY . .
-RUN pnpm build
+RUN npm run build
 
 FROM node:22-alpine AS production
 ENV NODE_ENV=production

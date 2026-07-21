@@ -74,10 +74,16 @@ def test_django_internal_url_is_never_public_frontend_configuration():
     assert "NEXT_PUBLIC_DJANGO_INTERNAL_URL" not in combined
 
 
-def test_frontend_dependency_layer_reuses_a_buildkit_cache():
+def test_frontend_uses_npm_with_a_buildkit_cache():
     dockerfile = read("src/frontend/Dockerfile")
+    package = read("src/frontend/package.json")
+    dev_compose = read("docker-compose.dev.yml")
 
-    assert "--mount=type=cache,id=pnpm,target=/pnpm/store" in dockerfile
-    assert "--config.fetchTimeout=300000" in dockerfile
-    assert "npm_config_fetch_timeout" not in dockerfile
-    assert "--store-dir=/pnpm/store" in dockerfile
+    assert "--mount=type=cache,id=npm,target=/root/.npm" in dockerfile
+    assert "npm ci --fetch-timeout=300000" in dockerfile
+    assert 'CMD ["npm", "run", "dev"]' in dockerfile
+    assert "COPY package.json package-lock.json ./" in dockerfile
+    assert 'command: ["npm", "run", "dev"]' in dev_compose
+    assert "npm" not in dockerfile
+    assert "packageManager" not in package
+    assert (ROOT / "src/frontend/package-lock.json").exists()
