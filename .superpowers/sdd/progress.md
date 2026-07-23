@@ -9,8 +9,8 @@
 | Task | Status | Implementation | Review |
 | --- | --- | --- | --- |
 | 1. Contracts and schema | Complete | `129a15d..a20c871` | Approved; no Critical/Important findings |
-| 2. Transactional lifecycle events | In progress | — | — |
-| 3. Outbox leasing and retry | Pending | — | — |
+| 2. Transactional lifecycle events | Complete | `55a4148..bc7790d` | Approved; no Critical/Important findings |
+| 3. Outbox leasing and retry | In progress | — | — |
 | 4. Integration ports and callback service | Pending | — | — |
 | 5. Revisions and polling service | Pending | — | — |
 | 6. Django adapters and configuration | Pending | — | — |
