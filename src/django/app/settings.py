@@ -37,6 +37,19 @@ DOCUMENT_DATA_ROOT = Path(
 DOCUMENT_FILES_ROOT = DOCUMENT_DATA_ROOT / "files"
 DOCUMENT_MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 MEDIA_ROOT = DOCUMENT_FILES_ROOT
+DOCUMENT_EVENT_CALLBACK = os.getenv("DOCUMENT_EVENT_CALLBACK", "")
+DOCUMENT_RAG_REVISION_STATE_READER = os.getenv(
+    "DOCUMENT_RAG_REVISION_STATE_READER",
+    "",
+)
+DOCUMENT_RAG_SYNC_COMMAND_SINK = os.getenv("DOCUMENT_RAG_SYNC_COMMAND_SINK", "")
+DOCUMENT_OUTBOX_BATCH_SIZE = int(os.getenv("DOCUMENT_OUTBOX_BATCH_SIZE", "50"))
+DOCUMENT_OUTBOX_LEASE_SECONDS = int(
+    os.getenv("DOCUMENT_OUTBOX_LEASE_SECONDS", "60")
+)
+DOCUMENT_OUTBOX_MAX_ATTEMPTS = int(
+    os.getenv("DOCUMENT_OUTBOX_MAX_ATTEMPTS", "8")
+)
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -47,6 +60,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "debug_toolbar",
     "documents",
+    "document_integrations",
     "store",
 ]
 
