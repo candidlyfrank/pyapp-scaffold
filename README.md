@@ -103,6 +103,9 @@ routes do not need to change.
 The document app records lifecycle changes in its own transactional outbox.
 It does not import or require a RAG implementation.
 
+This project ships no scheduler, external provider, or RAG implementation;
+application owners must implement, configure, and operate future adapters.
+
 Configure future adapters with:
 
 - `DOCUMENT_EVENT_CALLBACK`: class implementing `handle(event)`.
