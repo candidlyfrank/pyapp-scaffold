@@ -39,6 +39,14 @@ Open:
 - Django admin: `http://localhost:8090/admin/`
 - Caddy FastAPI route: `http://localhost/fastapi/health`
 
+### Kimi-style interactions demo
+
+Open `http://localhost:3000/chat` for an isolated, original Kimi-style
+interface reference. Its mock chat transport is `POST /interactions/api/chat`,
+selected attachments stay in the browser and are not uploaded, and its local
+history/preferences use dedicated `kimi.interactions.*` keys. The existing
+`/chat` route and Django chat API remain independent.
+
 Browser code calls Django through relative `/api/...` paths. Server-rendered frontend code uses the private `DJANGO_INTERNAL_URL=http://django:8090` and forwards only the incoming cookie header to that configured origin.
 
 The frontend process health endpoint is `http://frontend:3000/api/health` on the private Compose network. It intentionally remains independent of Django; Caddy reserves public `/api/*` paths for Django.
