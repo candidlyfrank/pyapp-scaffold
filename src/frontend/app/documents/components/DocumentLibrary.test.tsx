@@ -14,6 +14,7 @@ const documentFixture: DocumentRecord = {
   contentType: "application/pdf",
   size: 2048,
   sha256: "a".repeat(64),
+  contentRevision: 1,
   createdAt: "2026-07-23T10:00:00Z",
   updatedAt: "2026-07-23T11:00:00Z",
   downloadUrl: "/api/documents/b240929d-0967-407e-942e-22e78778a22b/download/",

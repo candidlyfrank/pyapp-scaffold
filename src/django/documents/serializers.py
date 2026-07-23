@@ -11,6 +11,7 @@ def serialize_document(document) -> dict[str, object]:
         "contentType": document.content_type,
         "size": document.size,
         "sha256": document.sha256,
+        "contentRevision": document.content_revision,
         "createdAt": document.created_at.isoformat(),
         "updatedAt": document.updated_at.isoformat(),
         "downloadUrl": reverse("documents:download", args=[document.id]),

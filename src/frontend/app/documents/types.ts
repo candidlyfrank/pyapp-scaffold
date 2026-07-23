@@ -7,6 +7,7 @@ export type DocumentRecord = {
   contentType: string;
   size: number;
   sha256: string;
+  contentRevision: number;
   createdAt: string;
   updatedAt: string;
   downloadUrl: string;

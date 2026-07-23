@@ -35,6 +35,8 @@ def test_post_upload_then_get_list(client):
     created = response.json()["results"][0]["document"]
     listed = client.get(COLLECTION_URL).json()["documents"]
     assert listed[0]["id"] == created["id"]
+    assert created["contentRevision"] == 1
+    assert listed[0]["contentRevision"] == 1
     assert listed[0]["filename"] == "notes.txt"
     assert listed[0]["downloadUrl"].endswith(f"/{created['id']}/download/")
 
@@ -145,6 +147,7 @@ def test_multipart_patch_replaces_file(client):
 
     document.refresh_from_db(using="documents")
     assert response.status_code == 200
+    assert response.json()["contentRevision"] == 2
     assert document.filename == "replacement.md"
     assert document.content_type == "text/markdown"
     with document.file.open("rb") as stored:
