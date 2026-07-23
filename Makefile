@@ -14,6 +14,7 @@ FASTAPI_UV := UV_CACHE_DIR=../../.uv-cache uv --project src/fastapi
 .PHONY: lock-django lock-fastapi test-django test-fastapi scan-django scan-fastapi scan compose-check ci act-ci
 .PHONY: document-storage-init prod-build prod-up prod-smoke backup restore rollback
 .PHONY: shell-django
+.PHONY: dispatch-document-outbox reconcile-document-revisions
 
 up:
 	$(COMPOSE) $(DEV_FILES) up --build -d
@@ -130,6 +131,12 @@ prod-build:
 
 document-storage-init:
 	.docker/scripts/init_document_storage.sh
+
+dispatch-document-outbox:
+	$(COMPOSE) $(DEV_FILES) exec django python manage.py dispatch_document_outbox
+
+reconcile-document-revisions:
+	$(COMPOSE) $(DEV_FILES) exec django python manage.py reconcile_document_revisions
 
 prod-up: document-storage-init
 	$(COMPOSE) $(PROD_FILES) up -d

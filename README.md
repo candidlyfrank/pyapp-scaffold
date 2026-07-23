@@ -98,6 +98,38 @@ routes do not need to change.
 > local development. Add authentication, ownership, and authorization checks
 > before exposing it publicly.
 
+### Document integration workflows
+
+The document app records lifecycle changes in its own transactional outbox.
+It does not import or require a RAG implementation.
+
+Configure future adapters with:
+
+- `DOCUMENT_EVENT_CALLBACK`: class implementing `handle(event)`.
+- `DOCUMENT_RAG_REVISION_STATE_READER`: class implementing `list_indexed()`.
+- `DOCUMENT_RAG_SYNC_COMMAND_SINK`: class implementing
+  `request_sync(snapshot)` and `request_delete(document_id)`.
+
+Run one callback batch:
+
+```sh
+make dispatch-document-outbox
+```
+
+Run one revision reconciliation pass:
+
+```sh
+make reconcile-document-revisions
+```
+
+These commands intentionally run once. Schedule them with the deployment
+system selected for the future RAG application. Callback delivery is
+at-least-once, so consumers must deduplicate by event UUID. Revision
+reconciliation is an independent consistency repair mechanism. Failed callback
+deliveries retry with bounded backoff and eventually become dead letters, which
+can be requeued through the dispatch command. Run `make migrate` before these
+workflows so the documents outbox schema is available.
+
 ## Validate
 
 ```sh
