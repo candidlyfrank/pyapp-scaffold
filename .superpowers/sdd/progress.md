@@ -13,8 +13,8 @@
 | 3. Outbox leasing and retry | Complete | `0977344..e8411a0` | Approved after guarded-transition fix |
 | 4. Integration ports and callback service | Complete | `f95826a..3702c20` | Approved; no Critical/Important findings |
 | 5. Revisions and polling service | Complete | `be8ec8f..ead5753` | Approved; no Critical/Important findings |
-| 6. Django adapters and configuration | In progress | — | — |
-| 7. Management commands | Pending | — | — |
+| 6. Django adapters and configuration | Complete | `01cb72b..49b45e2` | Approved; no Critical/Important findings |
+| 7. Management commands | In progress | — | — |
 | 8. API/frontend compatibility | Pending | — | — |
 | 9. Architecture tests/docs/Make | Pending | — | — |
 | 10. Full verification | Pending | — | — |
