@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 
-from documents.models import Document
+from documents.models import Document, DocumentOutboxEvent
 from documents.services import create_document, delete_document, update_document
 
 
@@ -147,3 +147,164 @@ def test_delete_restores_file_when_database_delete_fails(tmp_path, settings):
     assert storage.exists(storage_name)
     with storage.open(storage_name, "rb") as restored:
         assert restored.read() == b"hello"
+
+
+def outbox_events(document_id):
+    return list(
+        DocumentOutboxEvent.objects.filter(document_id=document_id).order_by(
+            "occurred_at",
+            "id",
+        )
+    )
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_create_appends_created_event(tmp_path, settings):
+    settings.MEDIA_ROOT = tmp_path
+
+    document = create_document(SimpleUploadedFile("notes.txt", b"hello"))
+
+    event = outbox_events(document.id)[0]
+    assert event.event_type == DocumentOutboxEvent.EventType.CREATED
+    assert event.content_revision == 1
+    assert event.source_sha256 == document.sha256
+    assert event.payload == {
+        "filename": "notes.txt",
+        "content_type": "text/plain",
+        "size": 5,
+    }
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_metadata_change_emits_event_without_incrementing_content_revision(
+    tmp_path,
+    settings,
+):
+    settings.MEDIA_ROOT = tmp_path
+    document = create_document(SimpleUploadedFile("notes.txt", b"hello"))
+
+    updated = update_document(document, {"title": "Knowledge", "tags": ["rag"]})
+
+    events = outbox_events(document.id)
+    assert updated.content_revision == 1
+    assert [event.event_type for event in events] == [
+        DocumentOutboxEvent.EventType.CREATED,
+        DocumentOutboxEvent.EventType.METADATA_UPDATED,
+    ]
+    assert events[-1].payload == {"changed_fields": ["tags", "title"]}
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_noop_metadata_update_emits_no_event(tmp_path, settings):
+    settings.MEDIA_ROOT = tmp_path
+    document = create_document(SimpleUploadedFile("notes.txt", b"hello"))
+
+    update_document(document, {"title": document.title})
+
+    assert len(outbox_events(document.id)) == 1
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_replacement_increments_revision_and_emits_content_event(tmp_path, settings):
+    settings.MEDIA_ROOT = tmp_path
+    document = create_document(SimpleUploadedFile("notes.txt", b"old"))
+
+    updated = update_document(
+        document,
+        {},
+        SimpleUploadedFile("new.md", b"# new"),
+    )
+
+    event = outbox_events(document.id)[-1]
+    assert updated.content_revision == 2
+    assert event.event_type == DocumentOutboxEvent.EventType.CONTENT_REPLACED
+    assert event.content_revision == 2
+    assert event.source_sha256 == updated.sha256
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_replacement_with_metadata_change_emits_both_events(tmp_path, settings):
+    settings.MEDIA_ROOT = tmp_path
+    document = create_document(SimpleUploadedFile("notes.txt", b"old"))
+
+    update_document(
+        document,
+        {"title": "Replacement"},
+        SimpleUploadedFile("new.md", b"# new"),
+    )
+
+    assert [event.event_type for event in outbox_events(document.id)] == [
+        DocumentOutboxEvent.EventType.CREATED,
+        DocumentOutboxEvent.EventType.CONTENT_REPLACED,
+        DocumentOutboxEvent.EventType.METADATA_UPDATED,
+    ]
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_delete_event_survives_document_deletion(tmp_path, settings):
+    settings.MEDIA_ROOT = tmp_path
+    document = create_document(SimpleUploadedFile("notes.txt", b"hello"))
+    document_id = document.id
+
+    delete_document(document)
+
+    deleted = DocumentOutboxEvent.objects.get(
+        document_id=document_id,
+        event_type=DocumentOutboxEvent.EventType.DELETED,
+    )
+    assert deleted.content_revision == 1
+    assert not Document.objects.filter(pk=document_id).exists()
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_create_removes_file_when_outbox_insert_fails(tmp_path, settings):
+    settings.MEDIA_ROOT = tmp_path
+
+    with patch(
+        "documents.services.append_document_event",
+        side_effect=RuntimeError("outbox unavailable"),
+    ):
+        with pytest.raises(RuntimeError, match="outbox unavailable"):
+            create_document(SimpleUploadedFile("notes.txt", b"hello"))
+
+    assert not Document.objects.exists()
+    assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_replace_rolls_back_record_and_new_file_when_outbox_insert_fails(
+    tmp_path,
+    settings,
+):
+    settings.MEDIA_ROOT = tmp_path
+    document = create_document(SimpleUploadedFile("notes.txt", b"old"))
+    old_name = document.file.name
+
+    with patch(
+        "documents.services.append_document_event",
+        side_effect=RuntimeError("outbox unavailable"),
+    ):
+        with pytest.raises(RuntimeError, match="outbox unavailable"):
+            update_document(document, {}, SimpleUploadedFile("new.md", b"# new"))
+
+    document.refresh_from_db(using="documents")
+    assert document.file.name == old_name
+    assert document.content_revision == 1
+    assert [path.name for path in tmp_path.iterdir()] == [old_name]
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_delete_restores_file_when_outbox_insert_fails(tmp_path, settings):
+    settings.MEDIA_ROOT = tmp_path
+    document = create_document(SimpleUploadedFile("notes.txt", b"hello"))
+    storage_name = document.file.name
+
+    with patch(
+        "documents.services.append_document_event",
+        side_effect=RuntimeError("outbox unavailable"),
+    ):
+        with pytest.raises(RuntimeError, match="outbox unavailable"):
+            delete_document(document)
+
+    assert Document.objects.filter(pk=document.id).exists()
+    assert document.file.storage.exists(storage_name)

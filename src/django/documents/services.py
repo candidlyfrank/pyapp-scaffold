@@ -5,7 +5,8 @@ from uuid import uuid4
 from django.core.files.base import ContentFile
 from django.db import transaction
 
-from .models import Document
+from .models import Document, DocumentOutboxEvent
+from .outbox import append_document_event
 from .validation import DocumentValidationError, normalize_tags, safe_filename, validate_upload
 
 DATABASE_ALIAS = "documents"
@@ -84,7 +85,19 @@ def create_document(uploaded_file, *, title: str | None = None) -> Document:
     )
     document.file.save(uuid4().hex, ContentFile(validated.content), save=False)
     try:
-        document.save(using=DATABASE_ALIAS)
+        with transaction.atomic(using=DATABASE_ALIAS):
+            document.save(using=DATABASE_ALIAS)
+            append_document_event(
+                event_type=DocumentOutboxEvent.EventType.CREATED,
+                document_id=document.id,
+                content_revision=document.content_revision,
+                source_sha256=document.sha256,
+                payload={
+                    "filename": document.filename,
+                    "content_type": document.content_type,
+                    "size": document.size,
+                },
+            )
     except Exception:
         document.file.storage.delete(document.file.name)
         raise
@@ -112,14 +125,41 @@ def update_document(
                 .get(pk=document.pk)
             )
             old_name = current.file.name
-            for field, value in values.items():
-                setattr(current, field, value)
+            changed_fields = sorted(
+                field for field, value in values.items() if getattr(current, field) != value
+            )
+            for field in changed_fields:
+                setattr(current, field, values[field])
             if validated_file is not None and new_name is not None:
                 current.file.name = new_name
                 current.content_type = validated_file.content_type
                 current.size = validated_file.size
                 current.sha256 = validated_file.sha256
-            current.save(using=DATABASE_ALIAS)
+                current.content_revision += 1
+
+            if changed_fields or validated_file is not None:
+                current.save(using=DATABASE_ALIAS)
+
+            if validated_file is not None:
+                append_document_event(
+                    event_type=DocumentOutboxEvent.EventType.CONTENT_REPLACED,
+                    document_id=current.id,
+                    content_revision=current.content_revision,
+                    source_sha256=current.sha256,
+                    payload={
+                        "filename": current.filename,
+                        "content_type": current.content_type,
+                        "size": current.size,
+                    },
+                )
+            if changed_fields:
+                append_document_event(
+                    event_type=DocumentOutboxEvent.EventType.METADATA_UPDATED,
+                    document_id=current.id,
+                    content_revision=current.content_revision,
+                    source_sha256=current.sha256,
+                    payload={"changed_fields": changed_fields},
+                )
     except Exception:
         if new_name is not None:
             document.file.storage.delete(new_name)
@@ -129,7 +169,7 @@ def update_document(
         try:
             document.file.storage.delete(old_name)
         except OSError:
-            logger.exception(
+            logger.error(
                 "Could not remove the superseded file for document %s.",
                 document.pk,
             )
@@ -137,20 +177,36 @@ def update_document(
 
 
 def delete_document(document: Document) -> None:
-    with transaction.atomic(using=DATABASE_ALIAS):
-        current = (
-            Document.objects.using(DATABASE_ALIAS)
-            .select_for_update()
-            .get(pk=document.pk)
-        )
-        storage = current.file.storage
-        storage_name = current.file.name
-        with storage.open(storage_name, "rb") as stored:
-            content = stored.read()
+    storage = None
+    storage_name = ""
+    content = b""
+    file_removed = False
+    try:
+        with transaction.atomic(using=DATABASE_ALIAS):
+            current = (
+                Document.objects.using(DATABASE_ALIAS)
+                .select_for_update()
+                .get(pk=document.pk)
+            )
+            storage = current.file.storage
+            storage_name = current.file.name
+            with storage.open(storage_name, "rb") as stored:
+                content = stored.read()
 
-        storage.delete(storage_name)
-        try:
+            storage.delete(storage_name)
+            file_removed = True
+            append_document_event(
+                event_type=DocumentOutboxEvent.EventType.DELETED,
+                document_id=current.id,
+                content_revision=current.content_revision,
+                source_sha256=current.sha256,
+                payload={
+                    "filename": current.filename,
+                    "content_type": current.content_type,
+                },
+            )
             current.delete(using=DATABASE_ALIAS)
-        except Exception:
+    except Exception:
+        if storage is not None and file_removed and not storage.exists(storage_name):
             storage.save(storage_name, ContentFile(content))
-            raise
+        raise
