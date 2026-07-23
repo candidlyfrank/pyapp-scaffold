@@ -2,7 +2,7 @@ import json
 import subprocess
 import sys
 from dataclasses import FrozenInstanceError
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -11,6 +11,7 @@ from django.conf import settings
 
 from documents.contracts import DocumentEventEnvelope
 from documents.models import Document, DocumentOutboxEvent
+from documents.revisions import list_document_revisions
 from documents.router import DocumentDatabaseRouter
 
 
@@ -76,7 +77,7 @@ def test_event_envelope_is_immutable_and_path_free():
         content_revision=1,
         source_sha256="a" * 64,
         payload={"filename": "notes.txt"},
-        occurred_at=datetime.now(timezone.utc),
+        occurred_at=datetime.now(UTC),
     )
 
     with pytest.raises(FrozenInstanceError):
@@ -111,3 +112,23 @@ def test_document_revision_and_outbox_are_stored_in_documents_database():
     assert event.status == DocumentOutboxEvent.Status.PENDING
     assert event.attempt_count == 0
     assert event._state.db == "documents"
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_revision_query_returns_path_free_snapshots():
+    document = Document.objects.create(
+        file="private-storage-name",
+        filename="report.txt",
+        title="report",
+        content_type="text/plain",
+        size=6,
+        sha256="0" * 64,
+        content_revision=3,
+    )
+
+    snapshot = list_document_revisions()[0]
+
+    assert snapshot.document_id == document.id
+    assert snapshot.content_revision == 3
+    assert snapshot.source_sha256 == document.sha256
+    assert "file" not in snapshot.__dict__
