@@ -74,6 +74,15 @@ def test_django_internal_url_is_never_public_frontend_configuration():
     assert "NEXT_PUBLIC_DJANGO_INTERNAL_URL" not in combined
 
 
+def test_django_persists_document_sqlite_and_files_in_project():
+    base = yaml.safe_load(read("docker-compose.yml"))
+    volumes = base["services"]["django"]["volumes"]
+    makefile = read("Makefile")
+
+    assert "./src/django/.data/documents:/app/.data/documents" in volumes
+    assert "prod-up: document-storage-init" in makefile
+
+
 def test_frontend_allows_hmr_through_the_development_domain():
     next_config = read("src/frontend/next.config.ts")
 

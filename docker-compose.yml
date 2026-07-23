@@ -17,6 +17,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - ./src/django/.data/documents:/app/.data/documents
 
   fastapi:
     build:

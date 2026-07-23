@@ -12,7 +12,7 @@ FASTAPI_UV := UV_CACHE_DIR=../../.uv-cache uv --project src/fastapi
 .PHONY: up down restart restart-django restart-fastapi restart-frontend logs logs-frontend shell migrate reset-db seed-db build-dev clean debug-django debug-fastapi
 .PHONY: lint test test-contract test-unit test-integration test-watch test-fast
 .PHONY: lock-django lock-fastapi test-django test-fastapi scan-django scan-fastapi scan compose-check ci act-ci
-.PHONY: prod-build prod-up prod-smoke backup restore rollback
+.PHONY: document-storage-init prod-build prod-up prod-smoke backup restore rollback
 .PHONY: shell-django
 
 up:
@@ -47,6 +47,7 @@ shell-django:
 
 migrate:
 	$(COMPOSE) $(DEV_FILES) exec django python manage.py migrate
+	$(COMPOSE) $(DEV_FILES) exec django python manage.py migrate --database=documents
 
 reset-db:
 	$(COMPOSE) $(DEV_FILES) down --volumes
@@ -127,7 +128,10 @@ act-ci:
 prod-build:
 	$(COMPOSE) $(PROD_FILES) build
 
-prod-up:
+document-storage-init:
+	.docker/scripts/init_document_storage.sh
+
+prod-up: document-storage-init
 	$(COMPOSE) $(PROD_FILES) up -d
 
 prod-smoke:

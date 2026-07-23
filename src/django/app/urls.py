@@ -2,7 +2,7 @@ from debug_toolbar.toolbar import debug_toolbar_urls
 from django.contrib import admin
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.urls import path
+from django.urls import include, path
 
 from . import views
 
@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/session/", views.session_api, name="session-api"),
     path("api/example-mutation/", views.example_mutation, name="example-mutation"),
     path("api/chat", views.chat_api, name="chat-api"),
+    path("api/documents/", include("documents.urls")),
 
     # django debug toolbar
 ]+ debug_toolbar_urls()

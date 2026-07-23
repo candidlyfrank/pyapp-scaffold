@@ -13,6 +13,12 @@ export default function Home() {
       <p>
         <Link href="/chat">Open the Django-backed chat →</Link>
       </p>
+      <p>
+        <Link href="/documents/upload">Upload documents →</Link>
+      </p>
+      <p>
+        <Link href="/documents">Open the document library →</Link>
+      </p>
     </main>
   );
 }

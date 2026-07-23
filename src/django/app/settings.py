@@ -24,12 +24,19 @@ SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = ENV in {"staging", "production"}
 CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_FAILURE_VIEW = "app.views.csrf_failure"
 ROOT_URLCONF = "app.urls"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 USE_TZ = True
 TIME_ZONE = "UTC"
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
+DOCUMENT_DATA_ROOT = Path(
+    os.getenv("DJANGO_DOCUMENT_DATA_ROOT", str(BASE_DIR / ".data" / "documents"))
+)
+DOCUMENT_FILES_ROOT = DOCUMENT_DATA_ROOT / "files"
+DOCUMENT_MAX_UPLOAD_BYTES = 25 * 1024 * 1024
+MEDIA_ROOT = DOCUMENT_FILES_ROOT
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -39,6 +46,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "debug_toolbar",
+    "documents",
     "store",
 ]
 
@@ -81,6 +89,12 @@ DATABASES = {
         "CONN_MAX_AGE": 60,
     }
 }
+DATABASES["documents"] = {
+    "ENGINE": "django.db.backends.sqlite3",
+    "NAME": DOCUMENT_DATA_ROOT / "metadata.sqlite3",
+    "TEST": {"DEPENDENCIES": []},
+}
+DATABASE_ROUTERS = ["documents.router.DocumentDatabaseRouter"]
 
 LOGGING = {
     "version": 1,

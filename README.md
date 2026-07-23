@@ -51,6 +51,53 @@ Browser code calls Django through relative `/api/...` paths. Server-rendered fro
 
 The frontend process health endpoint is `http://frontend:3000/api/health` on the private Compose network. It intentionally remains independent of Django; Caddy reserves public `/api/*` paths for Django.
 
+### Document upload and library
+
+The document workspace uses live Django API data through the Caddy origin:
+
+- `https://pyapp.envx/documents/upload` uploads one or more documents.
+- `https://pyapp.envx/documents` searches, filters, and sorts the library.
+- `https://pyapp.envx/documents/{id}` edits metadata, replaces files, downloads, and deletes.
+
+Use the Caddy URL for document operations because it serves Next.js and proxies
+relative `/api/...` requests to Django on the same origin.
+
+Phase one accepts PDF, DOCX, UTF-8 TXT, Markdown, and CSV files up to 25 MB
+each. Django validates file contents rather than trusting browser MIME metadata.
+Document metadata is stored in a dedicated SQLite database, while existing
+Django apps continue using PostgreSQL.
+
+Persistent local document data is stored beneath:
+
+```text
+src/django/.data/documents/
+├── metadata.sqlite3
+└── files/
+```
+
+Initialize both Django databases with:
+
+```sh
+make migrate
+```
+
+Before starting the hardened production Compose profile, initialize the
+project-local bind mount so Django's non-root UID can write SQLite and files:
+
+```sh
+make document-storage-init
+```
+
+`make prod-up` runs this initialization automatically.
+
+The document database can later be moved to PostgreSQL by changing the
+`documents` database alias and migrating its ORM data; the API and Next.js
+routes do not need to change.
+
+> **Security:** The document workspace is intentionally unauthenticated for
+> local development. Add authentication, ownership, and authorization checks
+> before exposing it publicly.
+
 ## Validate
 
 ```sh
