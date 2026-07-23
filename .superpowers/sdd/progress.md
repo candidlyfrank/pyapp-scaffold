@@ -15,7 +15,7 @@
 | 5. Revisions and polling service | Complete | `be8ec8f..ead5753` | Approved; no Critical/Important findings |
 | 6. Django adapters and configuration | Complete | `01cb72b..49b45e2` | Approved; no Critical/Important findings |
 | 7. Management commands | Complete | `c94c96f..9250f0f` | Approved; no Critical/Important findings |
-| 8. API/frontend compatibility | In progress | — | — |
-| 9. Architecture tests/docs/Make | Pending | — | — |
+| 8. API/frontend compatibility | Complete | `51ffa7e..6b8d1fc` | Approved; no Critical/Important findings |
+| 9. Architecture tests/docs/Make | In progress | — | — |
 | 10. Full verification | Pending | — | — |
 | Final whole-branch review | Pending | — | — |
