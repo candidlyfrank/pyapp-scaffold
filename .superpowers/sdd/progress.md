@@ -8,8 +8,8 @@
 
 | Task | Status | Implementation | Review |
 | --- | --- | --- | --- |
-| 1. Contracts and schema | In progress | — | — |
-| 2. Transactional lifecycle events | Pending | — | — |
+| 1. Contracts and schema | Complete | `129a15d..a20c871` | Approved; no Critical/Important findings |
+| 2. Transactional lifecycle events | In progress | — | — |
 | 3. Outbox leasing and retry | Pending | — | — |
 | 4. Integration ports and callback service | Pending | — | — |
 | 5. Revisions and polling service | Pending | — | — |
