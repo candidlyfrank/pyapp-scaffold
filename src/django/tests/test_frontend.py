@@ -90,6 +90,6 @@ def test_frontend_uses_npm_with_a_buildkit_cache():
     assert 'CMD ["npm", "run", "dev"]' in dockerfile
     assert "COPY package.json package-lock.json ./" in dockerfile
     assert 'command: ["npm", "run", "dev"]' in dev_compose
-    assert "npm" not in dockerfile
+    assert "pnpm" not in dockerfile
     assert "packageManager" not in package
     assert (ROOT / "src/frontend/package-lock.json").exists()

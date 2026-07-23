@@ -10,6 +10,9 @@ export default function Home() {
         sessions, permissions, and CSRF validation.
       </p>
       <Link href="/account">View the authenticated request example →</Link>
+      <p>
+        <Link href="/chat">Open the Django-backed chat →</Link>
+      </p>
     </main>
   );
 }

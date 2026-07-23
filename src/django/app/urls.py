@@ -24,6 +24,7 @@ urlpatterns = [
     # nextjs
     path("api/session/", views.session_api, name="session-api"),
     path("api/example-mutation/", views.example_mutation, name="example-mutation"),
+    path("api/chat", views.chat_api, name="chat-api"),
 
     # django debug toolbar
 ]+ debug_toolbar_urls()
