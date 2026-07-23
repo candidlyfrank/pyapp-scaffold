@@ -1,7 +1,6 @@
 import ast
 from pathlib import Path
 
-
 DJANGO_ROOT = Path(__file__).resolve().parents[1]
 
 
