@@ -152,18 +152,38 @@ def mark_failed(
             "last_error_code": safe_code,
         }
         if event.attempt_count >= max_attempts:
-            DocumentOutboxEvent.objects.using(DATABASE_ALIAS).filter(pk=event.id).update(
-                status=DocumentOutboxEvent.Status.DEAD_LETTER,
-                **common,
+            updated = (
+                DocumentOutboxEvent.objects.using(DATABASE_ALIAS)
+                .filter(
+                    pk=event.id,
+                    status=DocumentOutboxEvent.Status.CLAIMED,
+                    claim_token=claim_token,
+                )
+                .update(
+                    status=DocumentOutboxEvent.Status.DEAD_LETTER,
+                    **common,
+                )
             )
+            if not updated:
+                return None
             return FailureDisposition.DEAD_LETTERED
 
         delay_seconds = min(5 * (2 ** (event.attempt_count - 1)), 15 * 60)
-        DocumentOutboxEvent.objects.using(DATABASE_ALIAS).filter(pk=event.id).update(
-            status=DocumentOutboxEvent.Status.PENDING,
-            available_at=now + timedelta(seconds=delay_seconds),
-            **common,
+        updated = (
+            DocumentOutboxEvent.objects.using(DATABASE_ALIAS)
+            .filter(
+                pk=event.id,
+                status=DocumentOutboxEvent.Status.CLAIMED,
+                claim_token=claim_token,
+            )
+            .update(
+                status=DocumentOutboxEvent.Status.PENDING,
+                available_at=now + timedelta(seconds=delay_seconds),
+                **common,
+            )
         )
+        if not updated:
+            return None
         return FailureDisposition.RETRIED
 
 

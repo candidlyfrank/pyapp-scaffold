@@ -1,7 +1,9 @@
 from datetime import UTC, datetime, timedelta
+from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
+from django.db.models.query import QuerySet
 
 from documents.contracts import FailureDisposition
 from documents.models import DocumentOutboxEvent
@@ -125,3 +127,59 @@ def test_dead_letter_can_be_requeued_and_due_events_counted():
 
     assert requeue_dead_letter(event.id, now=now) is True
     assert count_eligible_events(now=now) == 1
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_stale_token_cannot_mark_event_failed():
+    now = datetime(2026, 7, 23, 12, tzinfo=UTC)
+    event = make_event(available_at=now)
+    claimed = claim_events(now=now, batch_size=1, lease_seconds=60)[0]
+
+    assert (
+        mark_failed(
+            event.id,
+            uuid4(),
+            error_code="callback_unavailable",
+            now=now,
+            max_attempts=8,
+        )
+        is None
+    )
+    event.refresh_from_db()
+    assert event.status == DocumentOutboxEvent.Status.CLAIMED
+    assert event.claim_token == claimed.claim_token
+
+
+@pytest.mark.django_db(databases=["documents"])
+def test_lost_failure_transition_race_preserves_new_claim():
+    now = datetime(2026, 7, 23, 12, tzinfo=UTC)
+    event = make_event(available_at=now)
+    claimed = claim_events(now=now, batch_size=1, lease_seconds=60)[0]
+    new_token = uuid4()
+    original_update = QuerySet.update
+
+    def change_claim_before_final_update(queryset, **kwargs):
+        original_update(
+            DocumentOutboxEvent.objects.filter(pk=event.id),
+            claim_token=new_token,
+        )
+        return original_update(queryset, **kwargs)
+
+    with patch.object(
+        QuerySet,
+        "update",
+        autospec=True,
+        side_effect=change_claim_before_final_update,
+    ):
+        result = mark_failed(
+            event.id,
+            claimed.claim_token,
+            error_code="callback_unavailable",
+            now=now,
+            max_attempts=8,
+        )
+
+    event.refresh_from_db()
+    assert result is None
+    assert event.status == DocumentOutboxEvent.Status.CLAIMED
+    assert event.claim_token == new_token
