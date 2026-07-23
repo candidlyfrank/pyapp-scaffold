@@ -1,6 +1,6 @@
 # Document RAG-Readiness SDD Progress
 
-- Worktree: `/private/tmp/pyapp-scaffold-document-rag-readiness`
+- Worktree: `/Users/noshysmiles/www/pyapp-scaffold/.worktrees/document-rag-readiness`
 - Branch: `codex/document-rag-readiness`
 - Plan: `docs/superpowers/plans/2026-07-23-document-rag-readiness.md`
 - Baseline: `7b9fb84`
