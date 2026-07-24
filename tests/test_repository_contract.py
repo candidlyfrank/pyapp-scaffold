@@ -79,6 +79,29 @@ def test_workflows_delegate_to_shared_make_commands():
     assert "make rollback" in rollback
 
 
+def test_api_reference_documents_supported_interfaces():
+    api = read("docs/API.md")
+    required_interfaces = [
+        "GET /api/session/",
+        "POST /api/example-mutation/",
+        "POST /api/chat",
+        "GET /api/documents/",
+        "POST /api/documents/",
+        "GET /api/documents/{id}/",
+        "PATCH /api/documents/{id}/",
+        "DELETE /api/documents/{id}/",
+        "GET /api/documents/{id}/download/",
+        "GET /api/health",
+        "POST /chat/api/chat",
+        "dispatch_document_outbox",
+        "reconcile_document_revisions",
+        "X-CSRFToken",
+        "207 Multi-Status",
+    ]
+    for interface in required_interfaces:
+        assert interface in api
+
+
 def test_services_are_independent_python_projects():
     root_project = read("pyproject.toml")
     django_project = read("src/django/pyproject.toml")
