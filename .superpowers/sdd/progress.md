@@ -17,5 +17,5 @@
 | 7. Management commands | Complete | `c94c96f..9250f0f` | Approved; no Critical/Important findings |
 | 8. API/frontend compatibility | Complete | `51ffa7e..6b8d1fc` | Approved; no Critical/Important findings |
 | 9. Architecture tests/docs/Make | Complete | `7ac91c3..61fe4de` | Approved after ownership-doc fix |
-| 10. Full verification | In progress | — | — |
-| Final whole-branch review | Pending | — | — |
+| 10. Full verification | Complete with environment constraints | `0732c60..d32ae02` | 94 Django, 17 frontend, Ruff/TS/Compose clean |
+| Final whole-branch review | In progress | — | — |
