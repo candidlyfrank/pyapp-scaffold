@@ -117,6 +117,14 @@ def test_frontend_production_dependencies_are_audited():
     assert "npm audit --omit=dev --audit-level=high" in makefile
 
 
+def test_django_production_dependency_excludes_known_vulnerable_release():
+    project = read("src/django/pyproject.toml")
+    lock = read("src/django/uv.lock")
+
+    assert '"django>=5.2.16,<6.0"' in project
+    assert 'name = "django"\nversion = "5.2.16"' in lock
+
+
 def test_document_rag_requirements_baseline_is_tracked_and_linked():
     srs = read("SOFTWARE_REQUIREMENTS_SPECIFICATION.md")
     architecture_index = read("docs/architecture/README.md")

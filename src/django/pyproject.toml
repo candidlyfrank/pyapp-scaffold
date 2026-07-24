@@ -4,7 +4,7 @@ version = "0.1.0"
 description = "Django service for the pyapp scaffold."
 requires-python = ">=3.11,<3.12"
 dependencies = [
-    "django>=5.0,<6.0",
+    "django>=5.2.16,<6.0",
     "psycopg[binary]>=3.2,<4.0",
     "redis>=5.0,<6.0",
     "python-json-logger>=2.0,<3.0",
