@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import yaml
@@ -100,6 +101,20 @@ def test_api_reference_documents_supported_interfaces():
     ]
     for interface in required_interfaces:
         assert interface in api
+
+
+def test_frontend_production_dependencies_are_audited():
+    package = json.loads(read("src/frontend/package.json"))
+    ci = read(".github/workflows/ci.yml")
+    makefile = read("Makefile")
+
+    assert package["dependencies"]["next"] == "16.2.11"
+    assert package["overrides"] == {
+        "postcss": "8.5.12",
+        "sharp": "0.35.0",
+    }
+    assert "npm audit --omit=dev --audit-level=high" in ci
+    assert "npm audit --omit=dev --audit-level=high" in makefile
 
 
 def test_services_are_independent_python_projects():

@@ -125,6 +125,7 @@ ci-backend: lint test test-integration scan compose-check
 
 ci-frontend:
 	cd src/frontend && npm ci
+	cd src/frontend && npm audit --omit=dev --audit-level=high
 	cd src/frontend && npm run lint
 	cd src/frontend && npm test
 	cd src/frontend && npm run build

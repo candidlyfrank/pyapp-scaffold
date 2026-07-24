@@ -290,7 +290,9 @@ git commit -m "docs(api): document implemented interfaces"
 
 **Interfaces:**
 - Consumes: npm registry advisory data and the Node 22 frontend toolchain.
-- Produces: Next.js 16.2.11 locked dependency graph and `npm audit --omit=dev --audit-level=high` CI gate.
+- Produces: Next.js 16.2.11 with exact PostCSS 8.5.12 and sharp 0.35.0
+  security overrides, plus an `npm audit --omit=dev --audit-level=high` CI
+  gate.
 
 - [ ] **Step 1: Add failing dependency policy contracts**
 
@@ -306,6 +308,10 @@ def test_frontend_production_dependencies_are_audited():
     makefile = read("Makefile")
 
     assert package["dependencies"]["next"] == "16.2.11"
+    assert package["overrides"] == {
+        "postcss": "8.5.12",
+        "sharp": "0.35.0",
+    }
     assert "npm audit --omit=dev --audit-level=high" in ci
     assert "npm audit --omit=dev --audit-level=high" in makefile
 ```
@@ -318,7 +324,8 @@ Run:
 UV_CACHE_DIR=.uv-cache uv run pytest tests/test_repository_contract.py::test_frontend_production_dependencies_are_audited -q
 ```
 
-Expected: failure because Next.js is 16.2.10 and no production audit gate exists.
+Expected: failure because Next.js is 16.2.10, the safe transitive overrides do
+not exist, and no production audit gate exists.
 
 - [ ] **Step 3: Upgrade through npm**
 
@@ -326,6 +333,8 @@ Run in a writable isolated checkout of the frontend directory:
 
 ```bash
 npm install --save-exact next@16.2.11
+npm pkg set overrides.postcss=8.5.12 overrides.sharp=0.35.0
+npm install --package-lock-only
 ```
 
 Copy only the resulting `package.json` and `package-lock.json` changes back to
