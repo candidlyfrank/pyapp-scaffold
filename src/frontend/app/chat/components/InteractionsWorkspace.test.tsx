@@ -23,7 +23,7 @@ describe("InteractionsWorkspace", () => {
     expect(screen.getByRole("heading", { name: "KIMI" })).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Ask anything, or task an agent...")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "New Chat" })).toBeInTheDocument();
-    for (const label of ["Swarm", "Slides", "Deep Research", "Websites", "Docs", "Sheets"]) {
+    for (const label of ["Swarm", "Deep Research", "Docs"]) {
       expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
     }
     expect(screen.getByText("Explore inspiration")).toBeInTheDocument();
@@ -45,11 +45,13 @@ describe("InteractionsWorkspace", () => {
     const user = userEvent.setup();
     render(<InteractionsWorkspace />);
 
-    await user.click(screen.getByRole("button", { name: "Websites" }));
-    expect(screen.getByLabelText("Message")).toHaveValue("Design a polished website for a creative studio");
+    await user.click(screen.getByRole("button", { name: "Docs" }));
+    expect(screen.getByLabelText("Message")).toHaveValue(
+      "Draft a concise project brief with next steps",
+    );
     await user.keyboard("{Enter}");
 
-    expect(screen.getByText("Design a polished website for a creative studio")).toBeInTheDocument();
+    expect(screen.getByText("Draft a concise project brief with next steps")).toBeInTheDocument();
     expect(screen.getByRole("status")).toHaveTextContent("Kimi is thinking");
 
     await act(async () => resolveResponse(response()));
@@ -58,7 +60,7 @@ describe("InteractionsWorkspace", () => {
       "/interactions/api/chat",
       expect.objectContaining({
         body: JSON.stringify({
-          message: "Design a polished website for a creative studio",
+          message: "Draft a concise project brief with next steps",
           model: "K2.6",
           mode: "Standard",
         }),
@@ -107,14 +109,10 @@ describe("InteractionsWorkspace", () => {
     expect(screen.getByRole("button", { name: "Open navigation" })).toHaveFocus();
   });
 
-  it("opens help and settings utility menus", async () => {
-    const user = userEvent.setup();
+  it("hides account-only utilities from anonymous users", () => {
     render(<InteractionsWorkspace />);
 
-    await user.click(screen.getByRole("button", { name: "Help" }));
-    expect(screen.getByRole("menuitem", { name: "Keyboard shortcuts" })).toBeInTheDocument();
-    await user.keyboard("{Escape}");
-    await user.click(screen.getByRole("button", { name: "Settings" }));
-    expect(screen.getByRole("menuitem", { name: "Privacy" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Help" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Settings" })).not.toBeInTheDocument();
   });
 });

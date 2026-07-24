@@ -11,7 +11,7 @@ FASTAPI_UV := UV_CACHE_DIR=../../.uv-cache uv --project src/fastapi
 
 .PHONY: up down restart restart-django restart-fastapi restart-frontend logs logs-frontend shell migrate reset-db seed-db build-dev clean debug-django debug-fastapi
 .PHONY: lint test test-contract test-unit test-integration test-watch test-fast
-.PHONY: lock-django lock-fastapi test-django test-fastapi scan-django scan-fastapi scan compose-check ci act-ci
+.PHONY: lock-django lock-fastapi test-django test-fastapi scan-django scan-fastapi scan compose-check ci-backend ci-frontend ci act-ci
 .PHONY: document-storage-init prod-build prod-up prod-smoke backup restore rollback
 .PHONY: shell-django
 .PHONY: dispatch-document-outbox reconcile-document-revisions
@@ -121,7 +121,15 @@ compose-check:
 	$(COMPOSE) $(STAGING_FILES) config >/dev/null
 	$(COMPOSE) $(PROD_FILES) config >/dev/null
 
-ci: lint test test-integration scan compose-check
+ci-backend: lint test test-integration scan compose-check
+
+ci-frontend:
+	cd src/frontend && npm ci
+	cd src/frontend && npm run lint
+	cd src/frontend && npm test
+	cd src/frontend && npm run build
+
+ci: ci-backend ci-frontend
 
 act-ci:
 	act pull_request -W .github/workflows/ci.yml

@@ -52,7 +52,8 @@ def test_workflows_delegate_to_shared_make_commands():
     assert "actions/setup-node@v4" in ci
     assert "node-version: 22" in ci
     assert "cache-dependency-path: src/frontend/package-lock.json" in ci
-    assert "make ci-frontend" in ci
+    for command in ["npm ci", "npm run lint", "npm test", "npm run build"]:
+        assert f"run: {command}" in ci
     assert "context: ./src/django" in publish
     assert "context: ./src/fastapi" in publish
     assert "make compose-check" in deploy
@@ -68,7 +69,7 @@ UV_CACHE_DIR=.uv-cache uv run pytest tests/test_repository_contract.py -q
 ```
 
 Expected: failure because `ci-backend`, `ci-frontend`, `actions/setup-node@v4`,
-and the new Make invocations do not yet exist.
+and the explicit frontend npm steps do not yet exist.
 
 - [ ] **Step 3: Correct stale interaction workspace tests**
 

@@ -26,6 +26,8 @@ def test_required_make_targets_exist():
         "scan-django",
         "scan-fastapi",
         "compose-check",
+        "ci-backend",
+        "ci-frontend",
         "ci",
         "act-ci",
         "rollback",
@@ -65,7 +67,12 @@ def test_workflows_delegate_to_shared_make_commands():
 
     assert "uv sync --locked --group dev --project src/django" in ci
     assert "uv sync --locked --group dev --project src/fastapi" in ci
-    assert "make ci" in ci
+    assert "make ci-backend" in ci
+    assert "actions/setup-node@v4" in ci
+    assert "node-version: 22" in ci
+    assert "cache-dependency-path: src/frontend/package-lock.json" in ci
+    for command in ["npm ci", "npm run lint", "npm test", "npm run build"]:
+        assert f"run: {command}" in ci
     assert "context: ./src/django" in publish
     assert "context: ./src/fastapi" in publish
     assert "make compose-check" in deploy
