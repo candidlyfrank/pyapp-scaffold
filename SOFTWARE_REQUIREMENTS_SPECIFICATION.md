@@ -47,7 +47,8 @@ The current system consists of:
 - scheduler-neutral Django management commands;
 - a dedicated frontend verification job covering locked installation, type
   checking, the complete frontend test suite, and a production build; and
-- a production dependency audit gate for the frontend runtime graph.
+- production dependency audit gates for the frontend and Python service
+  runtime graphs.
 
 The current system does not extract document text, create chunks or embeddings,
 store vectors, retrieve context, call a language model, or generate answers.
@@ -553,6 +554,7 @@ The outbox shall contain:
 | NFR-SEC-008 | Future | The system SHALL define retention, deletion, audit, and sensitive-data policies. |
 | NFR-SEC-009 | Future | Provider logs and prompts SHALL NOT disclose document content beyond configured policy. |
 | NFR-SEC-010 | Implemented | CI SHALL audit the installed frontend production dependency graph and fail when npm reports a high- or critical-severity advisory. |
+| NFR-SEC-011 | Implemented | CI SHALL audit the installed Python service production dependency graphs and fail when `pip-audit` reports a known vulnerability. |
 
 ### 7.3 Performance and scalability
 
@@ -763,7 +765,9 @@ The implemented baseline is acceptable when:
 15. the frontend verification job completes a locked install, type check,
     complete frontend test run, and production build; and
 16. the installed frontend production dependency graph passes the configured
-    high-severity npm audit gate.
+    high-severity npm audit gate; and
+17. the installed Django, FastAPI, and root Python dependency graphs pass the
+    configured `pip-audit` gates.
 
 ### 10.2 End-to-end RAG acceptance
 
@@ -806,6 +810,7 @@ The future RAG system is acceptable when:
 | TEST-012 | Future | Security tests SHALL cover authorization leakage, malicious files, and provider data handling. |
 | TEST-013 | Future | Evaluation tests SHALL detect retrieval or grounded-answer regressions. |
 | TEST-014 | Implemented | A dedicated frontend verification job SHALL run `npm ci`, TypeScript checking, the complete Vitest suite, and a production Next.js build. |
+| TEST-015 | Implemented | Backend CI SHALL run `pip-audit` against the installed Django, FastAPI, and root Python dependency graphs. |
 
 ## 12. Operational Requirements
 
@@ -835,7 +840,7 @@ The future RAG system is acceptable when:
 | SOLID separation | AR, NFR-MNT | Architecture and isolated unit tests |
 | Implemented API discoverability | API-DOC-001, NFR-MNT-006 | Repository documentation contract and `docs/API.md` review |
 | Frontend delivery quality | TEST-006, TEST-014 | Dedicated frontend verification job |
-| Production dependency security | NFR-SEC-010 | Locked install and high-severity production dependency audit |
+| Production dependency security | NFR-SEC-010, NFR-SEC-011, TEST-015 | Locked installs and production dependency audit gates |
 | End-to-end RAG indexing | RAG-SRC, RAG-EXT, RAG-CHK, RAG-EMB, RAG-IDX, RAG-JOB | Future extractor, worker, index, and end-to-end tests |
 | Grounded document answers | RAG-RET, RAG-GEN, RAG-EVAL | Future relevance, citation, and groundedness evaluations |
 | Secure production operation | NFR-SEC, NFR-OBS, OPS | Future security, operational, and recovery tests |

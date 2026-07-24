@@ -135,6 +135,7 @@ def test_document_rag_requirements_baseline_is_tracked_and_linked():
     assert "## 11. Test Requirements" in srs
     assert "frontend verification job" in srs
     assert "production dependency" in srs
+    assert "Python service production dependency graphs" in srs
     assert "docs/API.md" in srs
     assert "Document file handling and RAG readiness" in architecture_index
     assert "# Document File Handling and RAG Readiness" in architecture_guide
