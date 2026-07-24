@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { handleChat } from "./route";
+import { handleChat } from "./handler";
 
 function request(body: unknown, contentType = "application/json") {
   return new Request("http://localhost/interactions/api/chat", {
