@@ -117,6 +117,21 @@ def test_frontend_production_dependencies_are_audited():
     assert "npm audit --omit=dev --audit-level=high" in makefile
 
 
+def test_document_rag_requirements_baseline_is_tracked_and_linked():
+    srs = read("SOFTWARE_REQUIREMENTS_SPECIFICATION.md")
+    architecture_index = read("docs/architecture/README.md")
+    architecture_guide = read(
+        "docs/architecture/document-file-handling-and-rag-readiness.md"
+    )
+
+    assert "## 11. Test Requirements" in srs
+    assert "frontend verification job" in srs
+    assert "production dependency" in srs
+    assert "docs/API.md" in srs
+    assert "Document file handling and RAG readiness" in architecture_index
+    assert "# Document File Handling and RAG Readiness" in architecture_guide
+
+
 def test_services_are_independent_python_projects():
     root_project = read("pyproject.toml")
     django_project = read("src/django/pyproject.toml")

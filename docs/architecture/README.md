@@ -2,6 +2,10 @@
 
 The scaffold uses Docker Compose only. The base Compose file defines shared services, while development, staging, and production overlays adjust runtime behavior for each environment.
 
+## Architecture Guides
+
+- [Document file handling and RAG readiness](document-file-handling-and-rag-readiness.md)
+
 ## Services
 
 - `frontend`: Next.js App Router service on port `3000`, with standalone production output.
