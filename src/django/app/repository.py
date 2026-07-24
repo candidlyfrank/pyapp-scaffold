@@ -1,5 +1,6 @@
-from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
+
 
 class BaseRepository:
     def __init__(self, model: models.Model):
@@ -32,4 +33,3 @@ class BaseRepository:
             obj.delete()
             return True
         return False
-
